@@ -1,6 +1,9 @@
 # Target overworld. If this world does not exist or is not NORMAL, the first NORMAL world is used.
 world-name: world
 
+# Available languages: fr, en.
+language: fr
+
 holograms:
   vertical-offset: 2.0
   interaction-width: 2.75
@@ -13,9 +16,19 @@ border:
   particle-height-blocks: 4
   particle-size: 1.25
 
+sounds:
+  chunk-unlocked:
+    enabled: true
+    sound: ENTITY_PLAYER_LEVELUP
+    volume: 1.0
+    pitch: 1.15
+
 requirements:
   # 0 means the plugin will create and persist a random seed in data.yml.
   random-seed: 0
+  # Optional global allowlist. Leave empty to use only the tier material lists below.
+  # If you add materials here, the generator will only ask for materials present in this list.
+  allowed-materials: []
   # Chunks close to the initial chunk should stay very accessible.
   start-area:
     max-distance: 2

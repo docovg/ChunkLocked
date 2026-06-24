@@ -4,6 +4,7 @@ import fr.abdelnaim.chunklocked.border.BorderManager;
 import fr.abdelnaim.chunklocked.command.ChunkLockedCommand;
 import fr.abdelnaim.chunklocked.hologram.HologramManager;
 import fr.abdelnaim.chunklocked.listener.ProtectionListener;
+import fr.abdelnaim.chunklocked.message.MessageService;
 import fr.abdelnaim.chunklocked.progression.ChunkProgression;
 import fr.abdelnaim.chunklocked.requirement.RequirementGenerator;
 import fr.abdelnaim.chunklocked.storage.DataStore;
@@ -17,6 +18,7 @@ public final class ChunkLockedPlugin extends JavaPlugin {
     private NamespacedKey hologramMarkerKey;
     private NamespacedKey hologramChunkKey;
     private DataStore dataStore;
+    private MessageService messages;
     private RequirementGenerator requirementGenerator;
     private ChunkProgression progression;
     private HologramManager hologramManager;
@@ -30,17 +32,18 @@ public final class ChunkLockedPlugin extends JavaPlugin {
         hologramChunkKey = new NamespacedKey(this, "hologram_chunk");
         dataStore = new DataStore(this);
         dataStore.load();
+        messages = new MessageService(this);
         requirementGenerator = new RequirementGenerator(this, dataStore);
-        progression = new ChunkProgression(this, dataStore, requirementGenerator);
-        hologramManager = new HologramManager(this, progression);
+        progression = new ChunkProgression(this, dataStore, requirementGenerator, messages);
+        hologramManager = new HologramManager(this, progression, messages);
         borderManager = new BorderManager(this, progression);
 
         progression.loadOrInitialize();
 
         Bukkit.getPluginManager().registerEvents(hologramManager, this);
-        Bukkit.getPluginManager().registerEvents(new ProtectionListener(this, progression), this);
+        Bukkit.getPluginManager().registerEvents(new ProtectionListener(this, progression, messages), this);
 
-        ChunkLockedCommand commandExecutor = new ChunkLockedCommand(this, progression);
+        ChunkLockedCommand commandExecutor = new ChunkLockedCommand(this, progression, messages);
         PluginCommand command = getCommand("chunklocked");
         if (command != null) {
             command.setExecutor(commandExecutor);
@@ -64,6 +67,7 @@ public final class ChunkLockedPlugin extends JavaPlugin {
     public void reloadChunkLocked() {
         reloadConfig();
         dataStore.load();
+        messages.reload();
         requirementGenerator.reload();
         progression.loadOrInitialize();
         refreshWorldState();
@@ -103,5 +107,9 @@ public final class ChunkLockedPlugin extends JavaPlugin {
 
     public NamespacedKey getHologramChunkKey() {
         return hologramChunkKey;
+    }
+
+    public MessageService messages() {
+        return messages;
     }
 }

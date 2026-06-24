@@ -1,6 +1,7 @@
 package fr.abdelnaim.chunklocked.command;
 
 import fr.abdelnaim.chunklocked.ChunkLockedPlugin;
+import fr.abdelnaim.chunklocked.message.MessageService;
 import fr.abdelnaim.chunklocked.model.ChunkPos;
 import fr.abdelnaim.chunklocked.progression.ChunkProgression;
 import java.util.ArrayList;
@@ -20,10 +21,12 @@ public final class ChunkLockedCommand implements CommandExecutor, TabCompleter {
 
     private final ChunkLockedPlugin plugin;
     private final ChunkProgression progression;
+    private final MessageService messages;
 
-    public ChunkLockedCommand(ChunkLockedPlugin plugin, ChunkProgression progression) {
+    public ChunkLockedCommand(ChunkLockedPlugin plugin, ChunkProgression progression, MessageService messages) {
         this.plugin = plugin;
         this.progression = progression;
+        this.messages = messages;
     }
 
     @Override
@@ -34,7 +37,7 @@ public final class ChunkLockedCommand implements CommandExecutor, TabCompleter {
             @NotNull String[] args
     ) {
         if (!sender.hasPermission("chunklocked.admin")) {
-            sender.sendMessage(Component.text("Tu n'as pas la permission.", NamedTextColor.RED));
+            sender.sendMessage(messages.component("command.no-permission", NamedTextColor.RED));
             return true;
         }
 
@@ -43,14 +46,14 @@ public final class ChunkLockedCommand implements CommandExecutor, TabCompleter {
             case "info" -> sendInfo(sender);
             case "reload" -> {
                 plugin.reloadChunkLocked();
-                sender.sendMessage(Component.text("ChunkLocked recharge.", NamedTextColor.GREEN));
+                sender.sendMessage(messages.component("command.reloaded", NamedTextColor.GREEN));
             }
             case "reset" -> {
                 progression.reset();
                 plugin.refreshWorldState();
-                sender.sendMessage(Component.text("Progression ChunkLocked reinitialisee.", NamedTextColor.GREEN));
+                sender.sendMessage(messages.component("command.reset", NamedTextColor.GREEN));
             }
-            default -> sender.sendMessage(Component.text("Usage: /" + label + " <info|reload|reset>", NamedTextColor.YELLOW));
+            default -> sender.sendMessage(messages.component("command.usage", NamedTextColor.YELLOW, "label", label));
         }
         return true;
     }
@@ -78,10 +81,12 @@ public final class ChunkLockedCommand implements CommandExecutor, TabCompleter {
     private void sendInfo(CommandSender sender) {
         World world = plugin.getTargetWorld();
         ChunkPos initial = progression.getInitialChunk();
-        sender.sendMessage(Component.text("ChunkLocked", NamedTextColor.GOLD));
-        sender.sendMessage(Component.text("Monde: " + (world == null ? "aucun" : world.getName()), NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("Chunk initial: " + (initial == null ? "non initialise" : initial.key()), NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("Chunks debloques: " + progression.getUnlockedCount(), NamedTextColor.GRAY));
-        sender.sendMessage(Component.text("Chunks disponibles: " + progression.getFrontierChunks().size(), NamedTextColor.GRAY));
+        String worldName = world == null ? messages.raw("command.info.none") : world.getName();
+        String initialChunk = initial == null ? messages.raw("command.info.not-initialized") : initial.key();
+        sender.sendMessage(messages.component("command.info.title", NamedTextColor.GOLD));
+        sender.sendMessage(messages.component("command.info.world", NamedTextColor.GRAY, "world", worldName));
+        sender.sendMessage(messages.component("command.info.initial", NamedTextColor.GRAY, "chunk", initialChunk));
+        sender.sendMessage(messages.component("command.info.unlocked", NamedTextColor.GRAY, "count", progression.getUnlockedCount()));
+        sender.sendMessage(messages.component("command.info.available", NamedTextColor.GRAY, "count", progression.getFrontierChunks().size()));
     }
 }

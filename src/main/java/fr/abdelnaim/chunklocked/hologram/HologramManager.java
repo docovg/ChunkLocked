@@ -1,6 +1,7 @@
 package fr.abdelnaim.chunklocked.hologram;
 
 import fr.abdelnaim.chunklocked.ChunkLockedPlugin;
+import fr.abdelnaim.chunklocked.message.MessageService;
 import fr.abdelnaim.chunklocked.model.ChunkPos;
 import fr.abdelnaim.chunklocked.model.ChunkRequirement;
 import fr.abdelnaim.chunklocked.model.Direction;
@@ -31,11 +32,13 @@ import org.bukkit.persistence.PersistentDataType;
 public final class HologramManager implements Listener {
     private final ChunkLockedPlugin plugin;
     private final ChunkProgression progression;
+    private final MessageService messages;
     private final Set<UUID> spawnedEntities = new HashSet<>();
 
-    public HologramManager(ChunkLockedPlugin plugin, ChunkProgression progression) {
+    public HologramManager(ChunkLockedPlugin plugin, ChunkProgression progression, MessageService messages) {
         this.plugin = plugin;
         this.progression = progression;
+        this.messages = messages;
     }
 
     public void refreshAll() {
@@ -124,7 +127,7 @@ public final class HologramManager implements Listener {
         TextDisplay textDisplay = world.spawn(base.clone().add(0.0, 1.25, 0.0), TextDisplay.class);
         textDisplay.setText(ChatColor.GOLD + progression.displayName(requirement.material())
                 + "\n" + ChatColor.YELLOW + "x" + requirement.amount()
-                + "\n" + ChatColor.GRAY + "Clic droit");
+                + "\n" + ChatColor.GRAY + messages.raw("hologram.right-click"));
         textDisplay.setBillboard(Display.Billboard.CENTER);
         textDisplay.setAlignment(TextDisplay.TextAlignment.CENTER);
         textDisplay.setLineWidth(180);

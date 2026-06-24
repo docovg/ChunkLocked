@@ -1,6 +1,7 @@
 package fr.abdelnaim.chunklocked.progression;
 
 import fr.abdelnaim.chunklocked.ChunkLockedPlugin;
+import fr.abdelnaim.chunklocked.message.MessageService;
 import fr.abdelnaim.chunklocked.model.ChunkPos;
 import fr.abdelnaim.chunklocked.model.ChunkRequirement;
 import fr.abdelnaim.chunklocked.requirement.RequirementGenerator;
@@ -12,6 +13,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -21,13 +23,20 @@ public final class ChunkProgression {
     private final ChunkLockedPlugin plugin;
     private final DataStore dataStore;
     private final RequirementGenerator requirementGenerator;
+    private final MessageService messages;
     private final Set<ChunkPos> unlockedChunks = new LinkedHashSet<>();
     private ChunkPos initialChunk;
 
-    public ChunkProgression(ChunkLockedPlugin plugin, DataStore dataStore, RequirementGenerator requirementGenerator) {
+    public ChunkProgression(
+            ChunkLockedPlugin plugin,
+            DataStore dataStore,
+            RequirementGenerator requirementGenerator,
+            MessageService messages
+    ) {
         this.plugin = plugin;
         this.dataStore = dataStore;
         this.requirementGenerator = requirementGenerator;
+        this.messages = messages;
     }
 
     public void loadOrInitialize() {
@@ -115,11 +124,11 @@ public final class ChunkProgression {
 
     public boolean tryUnlock(Player player, ChunkPos chunk) {
         if (unlockedChunks.contains(chunk)) {
-            player.sendActionBar(Component.text("Ce chunk est deja debloque.", NamedTextColor.YELLOW));
+            player.sendActionBar(messages.component("chunk.already-unlocked", NamedTextColor.YELLOW));
             return false;
         }
         if (!isFrontierChunk(chunk)) {
-            player.sendActionBar(Component.text("Ce chunk n'est pas adjacent a la zone debloquee.", NamedTextColor.RED));
+            player.sendActionBar(messages.component("chunk.not-adjacent", NamedTextColor.RED));
             return false;
         }
 
@@ -127,9 +136,13 @@ public final class ChunkProgression {
         int available = countItems(player.getInventory(), requirement.material());
         if (available < requirement.amount()) {
             int missing = requirement.amount() - available;
-            player.sendMessage(Component.text(
-                    "Il manque " + missing + "x " + displayName(requirement.material()) + " pour debloquer ce chunk.",
-                    NamedTextColor.RED
+            player.sendMessage(messages.component(
+                    "chunk.missing-items",
+                    NamedTextColor.RED,
+                    "missing",
+                    missing,
+                    "item",
+                    displayName(requirement.material())
             ));
             return false;
         }
@@ -138,8 +151,28 @@ public final class ChunkProgression {
         unlockedChunks.add(chunk);
         persistUnlocked();
         ensureFrontierRequirements();
-        player.sendMessage(Component.text("Chunk debloque: " + chunk.key(), NamedTextColor.GREEN));
+        playSuccessSound(player);
+        player.sendMessage(messages.component("chunk.unlocked", NamedTextColor.GREEN, "chunk", chunk.key()));
         return true;
+    }
+
+    private void playSuccessSound(Player player) {
+        if (!plugin.getConfig().getBoolean("sounds.chunk-unlocked.enabled", true)) {
+            return;
+        }
+
+        String soundName = plugin.getConfig().getString("sounds.chunk-unlocked.sound", "ENTITY_PLAYER_LEVELUP");
+        Sound sound;
+        try {
+            sound = Sound.valueOf(soundName);
+        } catch (IllegalArgumentException exception) {
+            plugin.getLogger().warning("Invalid sounds.chunk-unlocked.sound: " + soundName);
+            sound = Sound.ENTITY_PLAYER_LEVELUP;
+        }
+
+        float volume = (float) plugin.getConfig().getDouble("sounds.chunk-unlocked.volume", 1.0D);
+        float pitch = (float) plugin.getConfig().getDouble("sounds.chunk-unlocked.pitch", 1.15D);
+        player.playSound(player.getLocation(), sound, volume, pitch);
     }
 
     public Location getSafeSpawnLocation() {

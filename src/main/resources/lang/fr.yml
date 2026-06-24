@@ -1,0 +1,23 @@
+command:
+  no-permission: "Tu n'as pas la permission."
+  reloaded: "ChunkLocked recharge."
+  reset: "Progression ChunkLocked reinitialisee."
+  usage: "Usage: /{label} <info|reload|reset>"
+  info:
+    title: "ChunkLocked"
+    world: "Monde: {world}"
+    none: "aucun"
+    initial: "Chunk initial: {chunk}"
+    not-initialized: "non initialise"
+    unlocked: "Chunks debloques: {count}"
+    available: "Chunks disponibles: {count}"
+
+chunk:
+  already-unlocked: "Ce chunk est deja debloque."
+  not-adjacent: "Ce chunk n'est pas adjacent a la zone debloquee."
+  missing-items: "Il manque {missing}x {item} pour debloquer ce chunk."
+  unlocked: "Chunk debloque: {chunk}"
+  locked: "Chunk verrouille"
+
+hologram:
+  right-click: "Clic droit"

@@ -1,6 +1,7 @@
 package fr.abdelnaim.chunklocked.listener;
 
 import fr.abdelnaim.chunklocked.ChunkLockedPlugin;
+import fr.abdelnaim.chunklocked.message.MessageService;
 import fr.abdelnaim.chunklocked.progression.ChunkProgression;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,11 +25,13 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 public final class ProtectionListener implements Listener {
     private final ChunkLockedPlugin plugin;
     private final ChunkProgression progression;
+    private final MessageService messages;
     private final Map<UUID, Long> lastWarning = new HashMap<>();
 
-    public ProtectionListener(ChunkLockedPlugin plugin, ChunkProgression progression) {
+    public ProtectionListener(ChunkLockedPlugin plugin, ChunkProgression progression, MessageService messages) {
         this.plugin = plugin;
         this.progression = progression;
+        this.messages = messages;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -143,6 +146,6 @@ public final class ProtectionListener implements Listener {
             return;
         }
         lastWarning.put(player.getUniqueId(), now);
-        player.sendActionBar(Component.text("Chunk verrouille", NamedTextColor.RED));
+        player.sendActionBar(messages.component("chunk.locked", NamedTextColor.RED));
     }
 }

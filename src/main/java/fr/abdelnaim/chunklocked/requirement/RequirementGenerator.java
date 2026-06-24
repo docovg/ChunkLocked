@@ -42,6 +42,7 @@ public final class RequirementGenerator {
     private final JavaPlugin plugin;
     private final DataStore dataStore;
     private List<Tier> tiers = List.of();
+    private Set<String> allowedMaterials = Set.of();
     private long seed;
 
     public RequirementGenerator(JavaPlugin plugin, DataStore dataStore) {
@@ -52,6 +53,7 @@ public final class RequirementGenerator {
 
     public void reload() {
         seed = dataStore.getOrCreateSeed(plugin.getConfig().getLong("requirements.random-seed", 0L));
+        allowedMaterials = loadAllowedMaterials();
         tiers = loadTiers();
     }
 
@@ -123,6 +125,21 @@ public final class RequirementGenerator {
         return blocked;
     }
 
+    private Set<String> loadAllowedMaterials() {
+        Set<String> allowed = new HashSet<>();
+        for (String name : plugin.getConfig().getStringList("requirements.allowed-materials")) {
+            Material material = Material.matchMaterial(name);
+            if (material == null) {
+                plugin.getLogger().warning("Unknown material in requirements.allowed-materials: " + name);
+                continue;
+            }
+            if (isVanillaAllowed(material)) {
+                allowed.add(material.name());
+            }
+        }
+        return allowed;
+    }
+
     private List<Material> parseMaterials(List<String> names, Set<String> blocked) {
         List<Material> materials = new ArrayList<>();
         for (String name : names) {
@@ -139,6 +156,11 @@ public final class RequirementGenerator {
     }
 
     private boolean isAllowed(Material material) {
+        return isVanillaAllowed(material)
+                && (allowedMaterials.isEmpty() || allowedMaterials.contains(material.name()));
+    }
+
+    private boolean isVanillaAllowed(Material material) {
         return material != null
                 && material.isItem()
                 && !material.isAir()
@@ -162,13 +184,20 @@ public final class RequirementGenerator {
     private ChunkRequirement createStartAreaRequirement(ChunkPos chunk) {
         Material material = Material.matchMaterial(plugin.getConfig().getString("requirements.start-area.material", "DIRT"));
         if (material == null || !isAllowed(material)) {
-            material = Material.DIRT;
+            material = fallbackAllowedMaterial();
         }
         int min = Math.max(1, plugin.getConfig().getInt("requirements.start-area.min-amount", 4));
         int max = Math.max(min, plugin.getConfig().getInt("requirements.start-area.max-amount", 12));
         Random random = new Random(seedFor(chunk) ^ 0xD1745EEDL);
         int amount = min + random.nextInt(max - min + 1);
         return new ChunkRequirement(material, amount);
+    }
+
+    private Material fallbackAllowedMaterial() {
+        if (!allowedMaterials.isEmpty()) {
+            return Material.matchMaterial(allowedMaterials.stream().sorted().findFirst().orElse("DIRT"));
+        }
+        return Material.DIRT;
     }
 
     private long seedFor(ChunkPos chunk) {

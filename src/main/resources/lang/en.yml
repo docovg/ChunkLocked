@@ -1,0 +1,23 @@
+command:
+  no-permission: "You do not have permission."
+  reloaded: "ChunkLocked reloaded."
+  reset: "ChunkLocked progress has been reset."
+  usage: "Usage: /{label} <info|reload|reset>"
+  info:
+    title: "ChunkLocked"
+    world: "World: {world}"
+    none: "none"
+    initial: "Initial chunk: {chunk}"
+    not-initialized: "not initialized"
+    unlocked: "Unlocked chunks: {count}"
+    available: "Available chunks: {count}"
+
+chunk:
+  already-unlocked: "This chunk is already unlocked."
+  not-adjacent: "This chunk is not adjacent to the unlocked area."
+  missing-items: "You need {missing}x more {item} to unlock this chunk."
+  unlocked: "Chunk unlocked: {chunk}"
+  locked: "Locked chunk"
+
+hologram:
+  right-click: "Right click"
